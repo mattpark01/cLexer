@@ -83,9 +83,44 @@ void tokenize(const char* source) {
             case '}': addToken(RIGHT_BRACE, "}", line); break;
             case ';': addToken(SEMICOLON, ";", line); break;
             case '+': addToken(PLUS, "+", line); break;
-            // More cases to be added for other tokens
-            case '\n': line++; break;
-            // Handle numbers, strings, two-character tokens, etc.
+            case ' ': case '\r': case '\t':
+                // Skip whitespace
+                break;
+            case '\n':
+                line++;
+                break;
+            case '/':
+                if (*(p + 1) == '/') {
+                    // Comment found, skip the rest of the line
+                    while (*p != '\n' && *p != '\0') p++;
+                    line++;
+                }
+                break;
+            case '=':
+                if (*(p + 1) == '=') {
+                    addToken(EQUAL_EQUAL, "==", line);
+                    p++; // Skip next char as it's part of this token
+                } else {
+                    addToken(EQUAL, "=", line);
+                }
+                break;
+            default:
+                if (isalpha(*p)) { // Starting a letter implies an identifier or keyword
+                    const char* start = p;
+                    while (isalnum(*p)) p++; // Consume the whole identifier
+                    size_t length = p - start;
+                    char* lexeme = (char*)malloc(length + 1);
+                    strncpy(lexeme, start, length);
+                    lexeme[length] = '\0';
+                    // Here, you'd check if `lexeme` is a keyword and call addToken accordingly
+                    free(lexeme);
+                    p--; // Adjust because the loop will increment p again
+                } else if (isdigit(*p)) {
+                    // Similar logic for numbers, handling both integers and floats
+                } else {
+                    // Handle unexpected characters
+                }
+                break;
         }
     }
     addToken(TOKEN_EOF, "", line); // Mark the end of file with an EOF token
